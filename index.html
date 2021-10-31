@@ -1,0 +1,46 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Empty.html</title>
+    <script>
+        ws = new WebSocket("ws://127.0.0.1:1655")
+        resolvers = {}
+        ws.onmessage = function(e){
+            let data = JSON.parse(e.data);
+            resolvers[data.id]?.(data.res);
+        }
+        api = new Proxy({}, {
+            get: function(target, prop, receiver) {
+                return (...args)=>new Promise(res=>{
+                    const id = Math.random().toString(36).substr(2);
+                    resolvers[id]=res;
+                    ws.send(JSON.stringify({func:prop, id, args}));
+                });
+            }});
+
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <p>Press F12. In console:</p>
+    <pre>
+        <code class="language-js">
+// Define a function that uses the python api. 
+async function myFunction() {
+    // Add the number in python and get back the result
+    const a = 2
+    const b = 3
+    const mySum = await api.add(a, b);
+    
+    // Print the sum
+    console.log(`The sum of ${a} and ${b} is ${mySum}`)
+}
+
+// Call the function
+myFunction() 
+        </code>
+    </pre>
+</body>
+
+</html>
